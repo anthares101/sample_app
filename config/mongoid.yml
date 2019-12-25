@@ -170,7 +170,7 @@ production:
       # connection setup. 
       # Use environment variables or a config file to keep your 
       # credentials safe.
-      uri: ENV['MONGODB_URL']
+      uri: <%=Rails.application.secrets.uri%>
       options:
         # Note that all options listed below are Ruby driver client options (the mongo gem).
         # Please refer to the driver documentation of the version of the mongo gem you are using
