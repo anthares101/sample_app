@@ -26,6 +26,7 @@ class UsersSignupTest < ActionDispatch::IntegrationTest
     follow_redirect!
     User.find_by(email: "user@example.com").destroy #Clear the user from database
     assert_template 'users/show'
+    assert is_logged_in?
     assert_not flash.empty?
   end
 end
