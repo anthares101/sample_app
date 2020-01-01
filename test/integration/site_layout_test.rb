@@ -3,7 +3,8 @@ require 'test_helper'
 class SiteLayoutTest < ActionDispatch::IntegrationTest
   def setup
     @user = User.new(name: "Example User", email: "user@example.com",
-                     password: "foobar", password_confirmation: "foobar")
+                     password: "foobar", password_confirmation: "foobar",
+                     activated: true, activated_at: Time.zone.now)
     @user.save
   end
 
