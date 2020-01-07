@@ -15,6 +15,14 @@ class User
   field :reset_sent_at, type: Time
 
   has_many :microposts, dependent: :destroy
+  has_many :active_relationships, class_name:  "Relationship",
+                                  foreign_key: "follower_id",
+                                  dependent:   :destroy,
+                                  inverse_of: :follower
+  has_many :passive_relationships, class_name:  "Relationship",
+                                   foreign_key: "followed_id",
+                                   dependent:   :destroy,
+                                   inverse_of: :followed
 
 
   attr_accessor :remember_token, :activation_token, :reset_token
@@ -91,6 +99,52 @@ class User
   # See "Following users" for the full implementation.
   def feed
     microposts
+  end
+
+  # Follows a user.
+  def follow(other_user)
+    active_relationships.create(follower_id: self.id, followed_id: other_user.id)
+  end
+
+  # Unfollows a user.
+  def unfollow(other_user)
+    relation = active_relationships.where(follower_id: self.id, followed_id: other_user.id).first
+    if not relation.nil?
+      relation.destroy
+    end
+  end
+
+  # Returns true if the current user is following the other user.
+  def following?(other_user)
+    not active_relationships.where(follower_id: self.id, followed_id: other_user.id).empty?
+  end
+
+  def followers_include?(other_user)
+    not passive_relationships.where(follower_id: other_user.id, followed_id: self.id).empty?
+  end
+
+  def following_count
+    active_relationships.count
+  end
+
+  def followers_count
+    passive_relationships.count
+  end
+
+  def following
+    id_list= []
+    active_relationships.each do |f|
+      id_list << f.followed_id
+    end
+    User.where(:id.in => id_list)
+  end
+
+  def followers
+    id_list= []
+    passive_relationships.each do |f|
+      id_list << f.follower_id
+    end
+    User.where(:id.in => id_list)
   end
 
   private
