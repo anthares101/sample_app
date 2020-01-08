@@ -63,6 +63,13 @@ class FollowingTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "feed on Home page" do
+    get root_path
+    @user.feed.page(1).each do |micropost|
+      assert_match CGI.escapeHTML(response.body), micropost.user.name
+    end
+  end
+
   def teardown
     @user.destroy
     @other_user.destroy
