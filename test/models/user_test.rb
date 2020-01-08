@@ -6,9 +6,13 @@ class UserTest < ActiveSupport::TestCase
                      password: "foobar", password_confirmation: "foobar",
                      activated: true, activated_at: Time.zone.now)
 
-    @other_user = User.new(name: "Example User 2", email: "user2@example.com", 
-    password: "foobar", password_confirmation: "foobar",
-    activated: true, activated_at: Time.zone.now)
+    @user2 = User.new(name: "Example User 2", email: "user2@example.com", 
+                     password: "foobar", password_confirmation: "foobar",
+                     activated: true, activated_at: Time.zone.now)
+
+    @user3 = User.new(name: "Example User 3", email: "user3@example.com", 
+                     password: "foobar", password_confirmation: "foobar",
+                     activated: true, activated_at: Time.zone.now)
   end
 
   test "should be valid" do
@@ -93,17 +97,46 @@ class UserTest < ActiveSupport::TestCase
 
   test "should follow and unfollow a user" do
     @user.save
-    @other_user.save
-    assert_not @user.following?(@other_user)
-    @user.follow(@other_user)
-    assert @user.following?(@other_user)
-    assert @other_user.followers_include?(@user)
-    @user.unfollow(@other_user)
-    assert_not @user.following?(@other_user)
+    @user2.save
+    assert_not @user.following?(@user2)
+    @user.follow(@user2)
+    assert @user.following?(@user2)
+    assert @user2.followers_include?(@user)
+    @user.unfollow(@user2)
+    assert_not @user.following?(@user2)
+  end
+
+  test "feed should have the right posts" do
+    @user.save
+    @user2.save
+    @user3.save
+
+    michael = @user
+    archer = @user2
+    lana = @user3
+
+    @micropost = michael.microposts.create(content: "Lorem ipsum")
+    @micropost2 = archer.microposts.create(content: "Lorem ipsum 2", created_at: 10.minutes.ago)
+    @micropost3 = lana.microposts.create(content: "Lorem ipsum 3", created_at: 2.years.ago)
+
+    michael.follow(lana)
+
+    # Posts from followed user
+    lana.microposts.each do |post_following|
+      assert michael.feed.include?(post_following)
+    end
+    # Posts from self
+    michael.microposts.each do |post_self|
+      assert michael.feed.include?(post_self)
+    end
+    # Posts from unfollowed user
+    archer.microposts.each do |post_unfollowed|
+      assert_not michael.feed.include?(post_unfollowed)
+    end
   end
 
   def teardown
     @user.destroy
-    @other_user.destroy
+    @user2.destroy
   end
 end
